@@ -22,4 +22,4 @@ Misc info:
   + <https://observablehq.com/d/afe64fd13a4194eb>
   + <https://github.com/observablehq/plot/issues/1590>
 + legend:
-    +<https://talk.observablehq.com/t/legend-placement-options/8407/2>
+  + <https://talk.observablehq.com/t/legend-placement-options/8407/2>
