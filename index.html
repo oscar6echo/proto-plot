@@ -25,13 +25,20 @@
         </p>
     </div>
 
-    <div id="plot-1" class="plot"></div>
+    <div>
+        <div id="plot-1a"></div>
+        <div id="plot-1b"></div>
+    </div>
     <div id="plot-2" class="plot"></div>
-    <div id="plot-3"></div>
+    <div id="plot-3" class="plot"></div>
 
     <script type="module">
         import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
         import * as d3 from "https://cdn.skypack.dev/d3@7";
+
+        ///////////////////////////
+        ///////////////////////////
+        // data
 
         const loadData = async (filename_1) => {
             const res = await fetch(filename_1);
@@ -40,62 +47,24 @@
             // return data.slice(0,10)
         }
 
-        ///////////////////////////
-        ///////////////////////////
-        // plot 1
-        const filename_1 = 'data-1.json';
-        const penguins = await loadData(filename_1);
+        const penguins = await loadData('penguins.json');
         window.penguins = penguins;
         console.log(penguins);
 
-        const plot_1 = Plot.plot({
-            grid: true,
-            color: { legend: true },
-            marks: [
-                Plot.dot(penguins, { x: "culmen_length_mm", y: "culmen_depth_mm", fill: "species" }),
-                Plot.linearRegressionY(penguins, { x: "culmen_length_mm", y: "culmen_depth_mm", stroke: "species" }),
-                Plot.linearRegressionY(penguins, { x: "culmen_length_mm", y: "culmen_depth_mm" })
-            ]
-        })
+        const population = await loadData('population.json');
+        window.population = population;
+        console.log(population);
 
-        const div_1 = document.querySelector("#plot-1");
-        // div_1.append(plot_1);
+        let data = null;
 
         ///////////////////////////
         ///////////////////////////
-        // plot 2
-
-        const filename_2 = 'data-2.json';
-        const data_2 = await loadData(filename_2);
-        window.data_2 = data_2;
-        console.log(data_2);
-
-        const plot_2 = Plot.plot({
-            x: { axis: null },
-            y: { tickFormat: "s", grid: true },
-            color: { scheme: "spectral", legend: true },
-            marks: [
-                Plot.barY(data_2, {
-                    x: "key",
-                    y: "population",
-                    fill: "key",
-                    fx: "state",
-                    sort: { x: null, color: null, fx: { value: "-y", reduce: "sum" } }
-                }),
-                Plot.ruleY([0])
-            ]
-        })
-
-        const div_2 = document.querySelector("#plot-2");
-        // div_2.append(plot_2);
-
-        ///////////////////////////
-        ///////////////////////////
-        // plot 3
+        // plot 1
+        // https://observablehq.com/d/98fa0c34fb79cfae
 
         const sl = d3.scaleLinear();
 
-        const data = penguins;
+        data = penguins;
         const arr = [];
         arr.push(
             Plot.dot(data, {
@@ -122,21 +91,33 @@
                 y: { domain: yDomain },
                 inset: 10,
                 grid: true,
-                color: { legend: true },
-                marks: arr
+                //color: { legend: false },
+                // figure: true,
+                marks: arr,
+
             });
 
         const insertPlot = (xDomain = [150, 250], yDomain = [2000, 6500]) => {
             const chart = renderPlot(xDomain, yDomain);
+            console.log(chart);
 
-            d3.select('#plot-3').selectAll('*').remove();
-            d3.select('#plot-3').append(() => chart);
+            d3.select('#plot-1a').selectAll('*').remove();
+            d3.select('#plot-1a').append(() => chart);
 
             // IMPORTANT - legend below - required for zoom alignment
-            d3.select(chart).select("div").raise();
+            // d3.select(chart).select("div").raise();
+            // else remove legend
             // d3.select(chart).select("div").remove();
+            // or manage legend separately
 
-            return [chart.scale("x"), chart.scale("y")];
+            return [
+                chart.scale("x"),
+                chart.scale("y"),
+                chart.legend("color"),
+                // chart.title("my title"),
+                // chart.subtitle("my subtitle"),
+                // chart.caption("my caption"),
+            ];
         };
 
         const zoomed = (e) => {
@@ -152,9 +133,56 @@
             insertPlot(xDomain, yDomain);
         };
 
-        const [xScale, yScale] = insertPlot();
+        const [xScale, yScale, legend] = insertPlot();
         const zoom = d3.zoom().on("zoom", zoomed);
-        d3.select('#plot-3').call(zoom);
+        d3.select('#plot-1a').call(zoom);
+        d3.select('#plot-1b').append(() => legend);
+
+
+        ///////////////////////////
+        ///////////////////////////
+        // plot 2
+
+        data = penguins;
+
+        const plot_2 = Plot.plot({
+            grid: true,
+            color: { legend: true },
+            marks: [
+                Plot.dot(data, { x: "culmen_length_mm", y: "culmen_depth_mm", fill: "species" }),
+                Plot.linearRegressionY(data, { x: "culmen_length_mm", y: "culmen_depth_mm", stroke: "species" }),
+                Plot.linearRegressionY(data, { x: "culmen_length_mm", y: "culmen_depth_mm" })
+            ]
+        })
+
+        const div_2 = document.querySelector("#plot-2");
+        // div_2.append(plot_2);
+
+        ///////////////////////////
+        ///////////////////////////
+        // plot 3
+        // https://observablehq.com/@observablehq/plot-grouped-bar-chart
+
+        data = population;
+
+        const plot_3 = Plot.plot({
+            x: { axis: null },
+            y: { tickFormat: "s", grid: true },
+            color: { scheme: "spectral", legend: true },
+            marks: [
+                Plot.barY(population, {
+                    x: "key",
+                    y: "population",
+                    fill: "key",
+                    fx: "state",
+                    sort: { x: null, color: null, fx: { value: "-y", reduce: "sum" } }
+                }),
+                Plot.ruleY([0])
+            ]
+        })
+
+        const div_3 = document.querySelector("#plot-3");
+        // div_3.append(plot_3);
 
     </script>
 </body>
